@@ -1,3 +1,9 @@
+This implementation of Latent Strain Analysis (LSA) is forked directly from Brian Cleary's original code, and has been modified to run with SLRUM rather than LSF. Specific modifications have been made to create_jobs.py for my particular cluster.
+
+see:
+http://github.com/brian-cleary/LatentStrainAnalysis
+http://latentstrainanalysis.readthedocs.org/
+
 Welcome to the Latent Strain Analysis (LSA) code repository!
 
 LSA was developed as a pre-assembly tool for partitioning metagenomic reads. It uses a hyperplane hashing function and streaming SVD in order to find covariance relations between k-mers. The code, and the process outline in LSFScripts in particular, have been optimized to scale to massive data sets in fixed memory with a highly distributed computing environment.
