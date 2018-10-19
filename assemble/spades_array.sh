@@ -55,7 +55,6 @@ echo """#!/bin/bash'
 #SBATCH -e ${outdir}/logs/${jobname}_%A_sample_%a.err
 #SBATCH --array=1-${njobs}%${njobs_at_once}
 #SBATCH --mem=128GB
-#SBATCH --array1-${njobs}%${njobs_at_once}
 
 # load spades
 module load spades
@@ -69,7 +68,8 @@ spades.py \
 -2 ${indir}/sample_${satid}_R2.fasta \
 -s ${indir}/sample_${satid}_R0.fasta \
 -o ${outdir}/sample_${satid} \
--tmp-dir /flush2/gof005/spades-tmp-${jobname}/sample_${satid}"""
+-tmp-dir /flush2/gof005/spades-tmp-${jobname}/sample_${satid}""" > $sscript
 
-
+# push to slurm
+#sbatch $sscript
 
