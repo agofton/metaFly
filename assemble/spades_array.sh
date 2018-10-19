@@ -8,8 +8,8 @@
 ####
 
 # set params & help
-hmessage=""
-usage="Usage: $(basename "$0") "
+hmessage="Writes and lauches a slurm array, sending each sample in -i {in dir} to its own node for assembly with SPAdes. Each sample should have a R1, R2, and R0 file with the same prefix eg. sample _n_R1.fasta."
+usage="Usage: $(basename "$0") -i {input dir} -o {output dir} -j {job name} -t {max time (hh:mm:ss)} -n {n samples} -c {n arrays at once} -h [show this help message]"
 
 while getopts hi:o:j:t:n:c: option
 do
@@ -36,43 +36,40 @@ shift $((OPTIND - 1))
 
 # set vars
 sscript="./mf_sub_scripts/spades_${jobname}"
+satid='${SLURM_ARRAY_TASK_ID}'
 
 # set dirs
 mkdir -p ${outdir}
 mkdir -p ${outdir}/logs
 mkdir -p /flush2/gof005/spades_tmp_${jobname}
+
 # write slurm script
- # SLURM vars
-    echo '#!/bin/bash' 												> $sscript
-    echo "" 														>> $sscript
-    echo "#SBATCH -J ${jobname}" 									>> $sscript
-    echo '#SBATCH --nodes=1' 										>> $sscript
-	echo '#SBATCH --ntasks-per-node=20' 							>> $sscript
-    echo "#SBATCH --time ${max_time}" 								>> $sscript
-    echo "#SBATCH -o ${outdir}/logs/${jobname}_%A_sample_%a.out" 	>> $sscript
-    echo "#SBATCH -e ${outdir}/logs/${jobname}_%A_sample_%a.err" 	>> $sscript
-    echo "#SBATCH --array=1-${njobs}%${njobs_at_once}" 				>> $sscript
-	echo "#SBATCH --mem=128GB" 										>> $sscript
-	echo "#SBATCH --array1-${njobs}%${njobs_at_once}" 				>> $sscript
-    echo "" 														>> $sscript
-	# load spades
-	echo "module load spades" 										>> $sscript
-	echo "" 														>> $sscript
-	# spades command
-	echo -n 'spades.py --only-assembler -t 20 -m 128' 				>> $sscript
-		# R1
-	echo -n "-i ${indir}/" 											>> $sscript
-	echo -n 'sample_${SLURM_ARRAY_TASK_ID}_R1.fasta ' 				>> $sscript
-		# R2
-	echo -n "-2 ${indir}/" 											>> $sscript
-	echo -n 'sample_${SLURM_ARRAY_TASK_ID}_R2.fasta ' 				>> $sscript
-		# R0
-	echo -n "-s ${indir}/" 											>> $sscript
-	echo -n 'sample_${SLURM_ARRAY_TASK_ID}_R0.fasta ' 				>> $sscript
-   		# output
-	echo -n "-o ${outdir}/" 										>> $sscript
-	echo -n 'sample_${SLURM_ARRAY_TASK_ID} ' 						>> $sscript
-		# tmp
-	echo -n "--tmp-dir /flush2/gof005/spades-tmp-${jobname}" 		>> $sscript
-	echo '/sample_${SLURM_ARRAY_TASK_ID}' 							>> $sscript	
+
+echo """#!/bin/bash'
+
+#SBATCH -J ${jobname}
+#SBATCH --nodes=1
+#SBATCH --ntasks-per-node=20
+#SBATCH --time ${max_time}
+#SBATCH -o ${outdir}/logs/${jobname}_%A_sample_%a.out
+#SBATCH -e ${outdir}/logs/${jobname}_%A_sample_%a.err
+#SBATCH --array=1-${njobs}%${njobs_at_once}
+#SBATCH --mem=128GB
+#SBATCH --array1-${njobs}%${njobs_at_once}
+
+# load spades
+module load spades
+
+# spades command
+spades.py \
+--only-assembler \
+-t 20 \
+-m 128 \
+-1 ${indir}/sample_${satid}_R1.fasta \
+-2 ${indir}/sample_${satid}_R2.fasta \
+-s ${indir}/sample_${satid}_R0.fasta \
+-o ${outdir}/sample_${satid} \
+-tmp-dir /flush2/gof005/spades-tmp-${jobname}/sample_${satid}"""
+
+
 
