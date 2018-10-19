@@ -1,0 +1,14 @@
+# metaFly data & dependencies
+########
+bin/
+lsa-slurm/original_reads/
+lsa-slurm/cluster_vectors/
+lsa-slurm/hashed_reads/
+lsa-slurm/Logs/
+lsa-slurm/read_partitions/
+lsa-slurm/testData.tar.gz
+mf_sub_scripts/
+
+# vim tmp files
+########
+*.swp
