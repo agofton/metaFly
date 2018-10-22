@@ -2,79 +2,53 @@
 
 ####
 # usage: run-centrifuge.sh \
-#				-i {in dir with .fasta files}
+#				-i {in dir with .fasta files}   <-host_filtered reads
 #				-db {indexed db dir + db prefix}
 #				-o {output dir}
 #				-j {job name}
 # 				-t {time: hh:mm:ss}
-#
-#
-#
+# 				-n {nsamples}
+# 				-c {narrays at once}
+# 				-h [help message]
 ####
-# set params
-PARAMS=""
-while (( "$#" )); do
-  case "$1" in
-    -db|--db)
-      db=$2
-      shift 2
-      ;;
-    -i|--in_dir)
-      in_dir=$2
-      shift 2
-      ;;
-    -o|--out_dir) 
-      out_dir=$2
-      shift 2
-      ;;
-	-j|--job_name)
-	  job_name=$2
-	  shift 2
-	  ;;
-	-t|--time)
-	  time=$2
-	  shift 2
-	  ;;
-	-*|--*=) # unsupported flags
-      echo "Error: Unsupported flag $1" >&2
-      exit 1
-      ;;
-    *) # preserve positional arguments
-      PARAM="$PARAMS $1"
-      shift
-      ;;
-  esac
-done
 
-eval set -- "$PARAMS"
+# set params and help/usage message
+help_message="Writes and launches a slurm array job sending each sample in  -i [in_dir], consisting of a fwd, rev, and unpaired .fasta files, to its own node to run centrifuge against the specified indexed database"
+usage="Usage: $(basename "$0") -d {indexed/db/dir/prefix} -i {input/.fasta/directory} -o {output/directory} -j {job_name} -t {max run time (hh:mm:ss)} -n {nsamples} -c {njobs at once} -h [disply this message] "
+
+while getopts hd:i:o:j:t: option
+do
+	case "${option}"
+	in
+		h) echo "$help_message"
+		   echo "$usage"
+	       exit;;
+		d) db=$OPTARG;; 
+		i) in_dir=$OPTARG;; 
+		o) out_dir$OPTARG;;
+		t) time$OPTARG;;
+		j) job_name$OPTARG;;
+		n) nsamples=$OPTARG;;
+		c) narrays_at_once=$OPTARG;;
+		p) sample_prefix=$OPTARG;;
+		:) printf "missing argument for  -%s\n" "$OPTARG" >&2
+		   echo "$usage" >&2
+	  	   exit 1;;
+	   \?) printf "illegal option: -%s\n" "$OPTARG" >&2
+		   echo "$usage" >&2
+		   exit 1;;
+	esac
+done
+shift $((OPTIND - 1))
 
 # set dirs
 mkdir -p ${out_dir}
 mkdir -p ${out_dir}/logs
 
 # set vars
-outfile=${out_dir}/centrifuge_${job_name}.out
-report=${out_dir}/centrifuge_${job_name}.rep
 y="/home/gof005/metaFly/mf_sub_scripts/centrifuge_${job_name}.q"
+satid='${SLURM_ARRAY_TASK_ID}'
 
-	# FWD seqs file list
-fwd_list=$(for x in ${in_dir}/*R1.fasta; do 
-				echo -n "${x},"
-		   done)							# assumes std illuma file naming "sample_x_R1.fasta"
-	fwd_list=$(sed 's/.$//g' <<< $fwd_list) # removing last , in list
-
-	# REV seqs file list
-rev_list=$(for x in ${in_dir}/*R2.fasta; do
-				echo -n "${x},"
-		   done)
-	rev_list=$(sed 's/.$//g' <<< $rev_list)
-
-	# Unpaired seqs file list
-unp_list=$(for x in ${in_dir}/*R0.fasta; do
-				echo -n "${x},"
-		   done) 							# R0 is my naming for unpaired reads
-	unp_list=$(sed 's/.$//g' <<< $unp_list)
-	
 # write slurm script
 echo """#!/bin/bash
 #SBATCH -J ${job_name}
@@ -84,20 +58,26 @@ echo """#!/bin/bash
 #SBATCH -o ${out_dir}/logs/${job_name}_%A.out
 #SBATCH -e ${out_dir}/logs/${job_name}_%A.err
 #SBATCH --mem=128GB
+#SBATCH --array=1-${nsamples}%${narrays_at_once}
 
 module load centrifuge
 
+#run centrifuge
 centrifuge \
 -f \
 -t \
 -x ${db} \
--1 ${fwd_list} \
--2 ${rev_list} \
--U ${unp_list} \
+-1 sample_${satid}_host-filtered_R1.fasta \
+-2 sample_${satid}_host-filtered_R2.fasta \
+-U sample_${satid}_host-filtered_R0.fasta \
 -p 20 \
--S ${outfile} \
---report-file ${report}""" > $y
+-S ${out_dir}/sample_${satid}.cent.out \
+--report-file ${out_dir}/sample_${satid}.cent.rep
 
+#kraken style report
+bin/centrifuge/centrifuge-kreport \
+-x ${db} \
+${out_dir}/sample_${satid}.cent.out > ${out_dir}/sample_${satid}.cent.krep""" > $y
 
 # push job to slurm
 sbatch $y
