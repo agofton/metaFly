@@ -2,7 +2,10 @@
 #SBATCH -J KmerLSI
 #SBATCH -o ./Logs/KmerLSI-Out.out
 #SBATCH -e ./Logs/KmerLSI-Err.err
-#SBATCH -t 02:00:00
+#SBATCH -t 00:30:00
+#SBATCH --nodes=1
+#SBATCH --mem=128GB
+module load python/2.7.13
 python -m Pyro4.naming -n 0.0.0.0 > ./Logs/nameserver.log 2>&1 &
 P1=$!
 python -m gensim.models.lsi_worker > ./Logs/worker1.log 2>&1 &

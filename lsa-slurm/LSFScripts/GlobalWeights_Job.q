@@ -2,7 +2,10 @@
 #SBATCH -J GlobalWeights
 #SBATCH -o ./Logs/GlobalWeights-Out.out
 #SBATCH -e ./Logs/GlobalWeights-Err.err
-#SBATCH -t 24:00:00
+#SBATCH -t 00:20:00
+#SBATCH --nodes=1
+#SBATCH --mem=128GB
+module load python/2.7.13
 echo Date: `date`
 t1=`date +%s`
 python LSA/tfidf_corpus.py -i ./hashed_reads/ -o ./cluster_vectors/

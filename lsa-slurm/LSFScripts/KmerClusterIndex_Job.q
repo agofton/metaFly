@@ -2,7 +2,10 @@
 #SBATCH -J KmerClusterIndex
 #SBATCH -o ./Logs/KmerClusterIndex-Out.out
 #SBATCH -e ./Logs/KmerClusterIndex-Err.err
-#SBATCH -t 02:00:00
+#SBATCH -t 00:30:00
+#SBATCH --nodes=1
+#SBATCH --mem=128GB
+module load python/2.7.13
 echo Date: `date`
 t1=`date +%s`
 python LSA/kmer_cluster_index.py -i ./hashed_reads/ -o ./cluster_vectors/ -t 0.7
