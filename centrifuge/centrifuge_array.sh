@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ####
-# usage: run-centrifuge.sh \
+# usage: centrifuge_array.sh.sh \
 #				-i {in dir with .fasta files}   <-host_filtered reads
 #				-db {indexed db dir + db prefix}
 #				-o {output dir}
@@ -16,7 +16,7 @@
 help_message="Writes and launches a slurm array job sending each sample in  -i [in_dir], consisting of a fwd, rev, and unpaired .fasta files, to its own node to run centrifuge against the specified indexed database"
 usage="Usage: $(basename "$0") -d {indexed/db/dir/prefix} -i {input/.fasta/directory} -o {output/directory} -j {job_name} -t {max run time (hh:mm:ss)} -n {nsamples} -c {njobs at once} -h [disply this message] "
 
-while getopts hd:i:o:j:t: option
+while getopts hd:i:o:t:j:n:c: option
 do
 	case "${option}"
 	in
@@ -25,12 +25,11 @@ do
 	       exit;;
 		d) db=$OPTARG;; 
 		i) in_dir=$OPTARG;; 
-		o) out_dir$OPTARG;;
-		t) time$OPTARG;;
-		j) job_name$OPTARG;;
+		o) out_dir=$OPTARG;;
+		t) time=$OPTARG;;
+		j) job_name=$OPTARG;;
 		n) nsamples=$OPTARG;;
-		c) narrays_at_once=$OPTARG;;
-		p) sample_prefix=$OPTARG;;
+		c) narrays_at_once=$OPTARG;;	
 		:) printf "missing argument for  -%s\n" "$OPTARG" >&2
 		   echo "$usage" >&2
 	  	   exit 1;;
@@ -46,7 +45,7 @@ mkdir -p ${out_dir}
 mkdir -p ${out_dir}/logs
 
 # set vars
-y="/home/gof005/metaFly/mf_sub_scripts/centrifuge_${job_name}.q"
+y="/OSM/CBR/NCMI_AGOF/work/metaFly/mf_sub_scripts/centrifuge_${job_name}.q"
 satid='${SLURM_ARRAY_TASK_ID}'
 
 # write slurm script

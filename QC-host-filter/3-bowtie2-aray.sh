@@ -37,8 +37,20 @@
 #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 # set params & help
-hmessage="Maps seqs to a ref genome with bowtie2 and keep seqs that do not match. Ref genome should already be indexed with bowtie2. Writes and launches a slurm array sending each sample to its own node for mapping. Assumes .fasta files, pe reads in separate files, and one unpaired read file - all labeled with the same filename_prefix_R1/R2/R0 - as formatted by qc/2_sort_trim_output_and_phix_filter.sh"
-usage="Usage: $(basename "$0") -d {indexed ref genome} -s {input dir} -o {output dir} -j {job name} -n {n samples} -c {run n samples at once} -t {max time (hh:mm:ss format)}"
+help_message="Maps seqs to a ref genome with bowtie2 and keep seqs that do not match. Ref genome should already be indexed with bowtie2.
+Writes and launches a slurm array sending each sample to its own node for mapping.
+Assumes .fasta files, pe reads in separate files, and one unpaired read file - all labeled with the same filename_prefix_R1/R2/R0.fasta - as formatted by 2-clean-trimmomatic-output.sh
+Edit lines 114-117 to change mapping params."
+
+usage="Usage: $(basename "$0") 
+{-d path/to/indexed/genome(s)/index_prefix} 
+{-s /input/dir} 
+{-o /output/dir} 
+{-j job_name} 
+{-n nsamples} 
+{-c run_nsamples_at_once} 
+{-t max time (hh:mm:ss format)}
+[-h show this help message]"
 
 while getopts hd:s:o:j:n:c:t: option; do
 	case "${option}" in
@@ -61,16 +73,17 @@ while getopts hd:s:o:j:n:c:t: option; do
 	esac
 done
 shift $((OPTIND - 1))
-    
+  
+# set vars
+slurm_script="./slurm-submission-scripts/bt2_SLURM_${job_name}.q"
+work_dir="`pwd`"
+satid='${SLRUM_ARRAY_TASK_ID}'  
+
 # set dirs
 mkdir -p ${output_dir}
 mkdir -p ${output_dir}/logs
 mkdir -p ${output_dir}/tmp
 
-# set vars
-y="./mf_sub_scripts/bt2_SLURM_${job_name}.q"
-work_dir="`pwd`"
-SATID='${SLRUM_ARRAY_TASK_ID}'
 # writing slurm script
   # SLURM variables
 echo """#!/bin/bash
@@ -95,25 +108,25 @@ done
 bowtie2 \
 -f \
 -x ${database} \
--1 ${seqs_dir}/sample_${SATID}_R1.fasta \
--2 ${seqs_dir}/sample_${SATID}_R2.fasta \
--U ${seqs_dir}/sample_${SATID}_R0.fasta \
+-1 ${seqs_dir}/sample_${satid}_R1.fasta \
+-2 ${seqs_dir}/sample_${satid}_R2.fasta \
+-U ${seqs_dir}/sample_${satid}_R0.fasta \
 --no-unal \
 --no-hd \
 --threads 20 \
 --fast-local \
---un-conc ${output_dir}/tmp/sample_${SATID}_unmapped \
---al ${output_dir}/tmp/sample_${SATID}_unmapped
+--un-conc ${output_dir}/tmp/sample_${satid}_unmapped \
+--al ${output_dir}/tmp/sample_${satid}_unmapped
 
-# cleanup
-cd ${output_dir}/tmp/sample_${SATID}_unmapped
-mv un-conc-mate.1 ${output_dir}/sample_${SATID}_R1.fasta
-mv un-conc-mate.2 ${output_dir}/sample_${SATID}_R2.fasta
-mv al-seqs ${output_dir}/sample_${SATID}_R0.fasta
+# cleanup - yet to be tested
+cd ${output_dir}/tmp/sample_${satid}_unmapped
+mv un-conc-mate.1 ${output_dir}/sample_${satid}_R1.fasta
+mv un-conc-mate.2 ${output_dir}/sample_${satid}_R2.fasta
+mv al-seqs ${output_dir}/sample_${satid}_R0.fasta
 cd ${work_dir}
 
-rm -r -f ${output_dir}/tmp/sample_${SATID}_unmapped""" > $y
+rm -r -f ${output_dir}/tmp/sample_${satid}_unmapped""" > ${slurm_script}
 
 # pushing script to slurm
-#sbatch ${y}
+sbatch ${slurm_script}
 

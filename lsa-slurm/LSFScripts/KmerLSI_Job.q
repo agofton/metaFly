@@ -6,6 +6,7 @@
 #SBATCH --nodes=1
 #SBATCH --mem=128GB
 module load python/2.7.13
+module load lsa
 python -m Pyro4.naming -n 0.0.0.0 > ./Logs/nameserver.log 2>&1 &
 P1=$!
 python -m gensim.models.lsi_worker > ./Logs/worker1.log 2>&1 &

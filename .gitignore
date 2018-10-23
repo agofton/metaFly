@@ -8,6 +8,8 @@ lsa-slurm/Logs/
 lsa-slurm/read_partitions/
 lsa-slurm/testData.tar.gz
 mf_sub_scripts/
+slurm-submission-scripts/
+lsa-ST/
 
 # vim tmp files
 ########

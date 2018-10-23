@@ -7,7 +7,6 @@
 #
 # Run this in an interactive pearcey session.
 #
-#
 # Default trimmomatic output will be 4 .fastq files per 1 pe input sample
 # 		sample_x_1P.fastq
 # 		sample_x_2P.fastq
@@ -25,13 +24,19 @@
 ####
 
 # set params & help
-hmessage="Runs severage usearch v9.2 scripts to clean up trimmomatic output including: renames files, filters any phiX seqs, concatenated fwd-unpaired and rev-unpaired files, and relabels seqIDs to: "'filename_prefix'_'read designation'.'unique num identifier'" <- eg sample_n_R1.1"
-usage="Usage: $(basename "$0") -i {input dir} -o {output dir}"
+help_message="Runs several usearch v9.2 scripts to clean up trimmomatic output including: renames files, filters phiX seqs, 
+concatenated fwd-unpaired and rev-unpaired files, and relabels seqIDs to:
+'filename_prefix'_'read designation'.'unique num identifier' (eg sample_n_R1.1)"
+
+usage="Usage: $(basename "$0") 
+{-i /input/dir} 
+{-o /output/dir}"
 
 while getopts hi:o: option; do
 	case "${option}"
 	in
-		h) echo "$hmessage"
+		h) echo "$help_message"
+		   echo ""
 		   echo "$usage"
 		   exit;;
 		i) in_dir=$OPTARG;;
@@ -58,7 +63,9 @@ do
 	t2="${out_dir}/tmp/$(basename "$rev" 2P.fastq)R2.fastq"
 
 	echo ""
+	echo "===================================="
 	echo "phiX filtering pe reads: ${x}"
+	echo "===================================="
 	echo ""
 	
 	bin/usearch9.2 \
@@ -76,7 +83,9 @@ do
 	
 	echo ${ca}
 	echo ""
-	echo "cating ${y} and ${rev_up}"
+	echo "=========================================="
+	echo "Concatenating ${y} and ${rev_up}"
+	echo "=========================================="
 	echo ""
 	
 	cat ${y} ${rev_up} > ${out_dir}/tmp2/${ca}
@@ -85,13 +94,14 @@ done
 for x in ${out_dir}/tmp2/*R0.fastq
 do
 	echo ""
-	echo "phiX filtering se reads: ${x}"
+	echo "=========================================="
+	echo "Filtering phiX reads from ${x}"
+	echo "=========================================="
 	echo ""
 	
 	bin/usearch9.2 \
 		-filter_phix ${x} \
 		-output "${out_dir}/tmp/$(basename "$x")" 
-
 done
 
 rm -r -f "${out_dir}/tmp2"
@@ -101,7 +111,9 @@ for x in ${out_dir}/tmp/*.fastq
 do
 	
 	echo ""
-	echo ".fastq to .fasta and rename: ${x}"
+	echo "==============================================="
+	echo "Converting .fastq to .fasta & renaming seqIDs: ${x}"
+	echo "=============================================="
 	echo ""
 
 	seq_label_prefix="$(basename "$x" .fastq)"
