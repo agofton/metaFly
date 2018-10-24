@@ -70,10 +70,10 @@ shift $((OPTIND - 1))
 
 # set vars
 home_dir="`pwd`"
-slurm_script="${home_dir}/trim-qc_${job_name}.q"
+slurm_script="./slurm-submission-scripts/trim-qc_${job_name}.q"
 out="${out_dir}/trimmomatic_out"
 logs="${out_dir}/logs"
-slogs="${home_dir}/slurm-logs"
+slogs="${out_dir}/slurm-logs"
 satid='${SLURM_ARRAY_TASK_ID}'
 
 # set dirs
@@ -99,11 +99,11 @@ module load trimmomatic/0.38
 trimmomatic PE \
 -threads 20 \
 -phred33 \
--trimlog ${logs}/trimlog_sample_${SATID} \
--summary ${logs}/sumfile_sample_${SATID} \
-${in_dir}/${filename_prefix}${SATID}_R1.fastq \
-${in_dir}/${filename_prefix}${SATID}_R2.fastq \
--baseout ${out}/${filename_prefix}${SATID}.fastq \
+-trimlog ${logs}/trimlog_sample_${satid} \
+-summary ${logs}/sumfile_sample_${satid} \
+${in_dir}/${filename_prefix}${satid}_R1.fastq \
+${in_dir}/${filename_prefix}${satid}_R2.fastq \
+-baseout ${out}/${filename_prefix}${satid}.fastq \
 ILLUMINACLIP:${adapters} \
 SLIDINGWINDOW:5:30 \
 LEADING:15
