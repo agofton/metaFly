@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ####
-# usage: 4_stitch_b6out.sh \
+# usage: 6_stitch_b6out.sh \
 #			-i {split b6out files dir} \ 	<- default = blast_out/splits
 #			-s {original seqs dir} \ 		<- default = bowite2/sorted
 #			-o {stitched output dir}  		<- default = blast_out/stitched
@@ -15,17 +15,25 @@
 # aleander.gofton@csiro.au; alexander.gofton@gmail.com
 #####
 
-# set params and help
-hmessage="Simple BASH script that will stitch together chunked .b6out files. Will also generate a list of identified genera in ${out_dir}/tax_list.txt. Users can use tax_list.txt to decide which taxa to filter or keep in the next step."
-usage="Usage: $(basename "$0") -i {input dir - containing chunked .b6out files} -s {seqs dir - containing files before they were chunked} -o {output dir} -h [print this message]"
+# set args and help
+help_message="Simple BASH script that will stitch together chunked .b6out files from split-n-blast-array.sh.
+Will also generate a list of identified genera in ./QC-host-filter/tax_files/tax-list.txt.
+Users can use tax_list.txt to decide which taxa to filter or keep in the next step."
 
-while getopts hi:o:j:n:d:t: option; do
+usage="Usage: $(basename "$0") 
+{-i /path/to/chunked/.b6out/files} 
+{-s /path/to/original/.fasta/files (before they were split)} 
+{-o /all/ouput/goes/here} 
+[-h print this message]"
+
+while getopts hi:o:s: option; do
 	case "${option}" in
-		h) echo "$hmessage"
+		h) echo "$help_message"
+		   echo ""
 		   echo "$usage"
 		   exit;;
 		i) in_dir=$OPTARG;;
-		s) orig_seqs_dir=$OPTARG;;
+		s) seqs_dir=$OPTARG;;
 		o) out_dir=$OPTARG;;
 		:) printf "missing argument for  -%s\n" "$OPTARG" >&2
 		   echo "$usage" >&2
@@ -37,21 +45,19 @@ while getopts hi:o:j:n:d:t: option; do
 done
 shift $((OPTIND - 1))
 
-#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 # set dirs
 mkdir -p ${out_dir}
+mkdir -p ./QC-host-filter/tax-files
 
-# use loop to cat chunks from each sample together
-for x in ${orig_seqs_dir}/*.fasta
-  do
-	
-	ids="${in_dir}/$(basename "$x" .fasta)_*.b6out"
+# for each original file, concatenate .b6out chunks together
+for x in ${seqs_dir}/*.fasta
+do
+	in="${in_dir}/$(basename "$x" .fasta)_*.b6out"
 	out="${out_dir}/$(basename "$x" .fasta).b6out"
 	
-	cat ${ids} > ${out}
-	
-  done
+	cat ${in} > ${out}	
+done
 
-# make genus level taxa list
-cat ${out_dir}/*.b6out | awk {print $1}' | sort -u > ${out_dir}/tax_list.txt
+# make ./QC-host-filter/tax-list.txt
+cat ${out_dir}/*.b6out | awk '{print $1}' | sort -u > ./QC-host-filter/tax-files/tax-list.txt
 

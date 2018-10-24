@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ####
-# usage: trim-qc.sh \
+# usage: 1-trimmomatic-array.sh \
 # 			-i {input dir containing raw .fastq} \ 
 # 			-o {output dir} 							# all output including logs will go here
 # 			-a {Illumina adapters to trim} \ 			# as specified in trimmomatic manual

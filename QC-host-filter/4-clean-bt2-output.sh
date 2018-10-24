@@ -1,6 +1,6 @@
 #!/bin/bash
 ####
-# usage: 2_clean_bt2_output.sh \
+# usage: 4-clean-bt2-output.sh \
 #			-i {input dir} \ 							<- master output dir from bowtie2
 #			-p {subdirectory name prefix to match} \ 	<- default from bt2_map_to_ref_array.sh is: sample_
 #			-o {output dir}

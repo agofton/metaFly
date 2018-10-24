@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ####
-# usage phix_filter.sh \
+# usage 2-clean-trimmomatic-output.sh \
 # 			-i {input directory containing .fastq files} 	# output from trimmomatic 
 # 			-o {output dir} 								# all output will go here
 #

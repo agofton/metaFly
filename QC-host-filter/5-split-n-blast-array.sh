@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #### 
-# usage: 3_split_n_blast_array.sh \
+# usage: 5_split_n_blast_array.sh \
 #         -i {input reads dir} \
 #		  -o {blast output dir} \
 #		  -j {job name} \

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 ##### 
-# usage: bowtie2_array.sh -d {indexed bt2 ref genome} \
+# usage: 3-bowtie2-array.sh -d {indexed bt2 ref genome} \
 #                         -s {dir containing input pe and se reads} \ 				<- output from QC - phix_filt
 #                         -o {dir for output} \ 									<- all output including logs will go here
 #                         -j {job name for SLURM} \

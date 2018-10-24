@@ -2,7 +2,7 @@
 #SBATCH -J SplitInput
 #SBATCH -o Logs/SplitInput-Out-%A.out
 #SBATCH -e Logs/SplitInput-Err-%A.err
-#SBATCH -t 24:00:00
+#SBATCH -t 24:00:00:
 #SBATCH --array=1-5
 echo Date: `date`
 t1=`date +%s`
