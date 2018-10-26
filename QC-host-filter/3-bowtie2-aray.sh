@@ -73,17 +73,63 @@ while getopts hd:s:o:j:n:c:t: option; do
 	esac
 done
 shift $((OPTIND - 1))
-  
+###########################################################################
 # set vars
 slurm_script="./slurm-submission-scripts/bt2_SLURM_${job_name}.q"
 work_dir="`pwd`"
 satid='${SLRUM_ARRAY_TASK_ID}'  
-
+narrays=$(($n_jobs-1))
+satid='${SLURM_ARRAY_TASK_ID}'
+satid2='"$SLURM_ARRAY_TASK_ID"'
+######################################################################## 
 # set dirs
 mkdir -p ${output_dir}
 mkdir -p ${output_dir}/logs
 mkdir -p ${output_dir}/tmp
-
+##############################
+# set array indexes
+# R1 index
+R1index=`for x in ${seqs_dir}/*R1.fasta; do
+			echo -n '"'
+			echo -n $(basename "$x")
+			echo -n '"'
+		done`
+	R1index="(${R1index});"
+		R1index=`sed -E 's@""@" \\\\\\n"@g' <<< ${R1index}`
+###########################################################
+# R2 index
+R2index=`for x in ${seqs_dir}/*R2.fasta; do
+			echo -n '"'
+			echo -n $(basename "$x")
+			echo -n '"'
+		done`
+	R2index="(${R2index});"
+		R2index=`sed -E 's@""@" \\\\\\n"@g' <<< ${R2index}`
+############################################################
+# R0 index
+R0index=`for x in ${seqs_dir}/*R0.fasta; do
+			echo -n '"'
+			echo -n $(basename "$x")
+			echo -n '"'
+		done`
+	R0index="(${R0index});"
+		R0index=`sed -E 's@""@" \\\\\\n"@g' <<< ${R0index}`
+#############################################################
+# unmapped dir index
+UMindex=`for x in ${seqs_dir}/*R1.fasta; do
+			echo -n '"'
+			echo -n $(basename "$x" _R1.fasta)_unmapped
+			echo -n '"'
+		done`
+	UMindex="(${UMindex});"
+		UMindex=`sed -E 's@""@" \\\\\\n"@g' <<< ${UMindex}`
+#############################################################
+# index vars
+R1I='${R1[$i]}'
+R2I='${R2[$i]}'
+R0I='${R0[$i]}'
+UMI='${UM[$i]}'
+#############################################################
 # writing slurm script
   # SLURM variables
 echo """#!/bin/bash
@@ -94,38 +140,50 @@ echo """#!/bin/bash
 #SBATCH --time ${time_per_sample}
 #SBATCH -o ${output_dir}/logs/${job_name}_%A_sample_%a.out
 #SBATCH -e ${output_dir}/logs/${job_name}_%A_sample_%a.err
-#SBATCH --array=1-${n_jobs}%${n_jobs_at_once}
+#SBATCH --array=0-${narrays}%${n_jobs_at_once}
 
-#load modules
+# load modules
 module load bowtie/2.2.9
 
-# loop through input R1 to creat tmp dirs
-for x in ${seqs_dir}/*R1.fasta; do
-	mkdir -p ${output_dir}/tmp/$(basename "$x" R1.fasta)unmapped
-done
+# print arrays
+R1=${R1index}
+R2=${R2index}
+R0=${R0index}
+UM=${UMindex}
 
-# bowtie2 command
+# main script
+if [ ! -z ${satid2} ]
+then
+i=${satid}
+
+mkdir -p ${ouput_dir}/tmp/${UMI}
+
 bowtie2 \
 -f \
 -x ${database} \
--1 ${seqs_dir}/sample_${satid}_R1.fasta \
--2 ${seqs_dir}/sample_${satid}_R2.fasta \
--U ${seqs_dir}/sample_${satid}_R0.fasta \
+-1 ${seqs_dir}/${R1I} \
+-2 ${seqs_dir}/${R2I} \
+-U ${seqs_dir}/${R0I} \
 --no-unal \
 --no-hd \
 --threads 20 \
 --fast-local \
---un-conc ${output_dir}/tmp/sample_${satid}_unmapped \
---al ${output_dir}/tmp/sample_${satid}_unmapped
+--un-conc ${output_dir}/tmp/${UMI} \
+--al ${output_dir}/tmp/${UMI}
 
 # cleanup - yet to be tested
-cd ${output_dir}/tmp/sample_${satid}_unmapped
-mv un-conc-mate.1 ${output_dir}/sample_${satid}_R1.fasta
-mv un-conc-mate.2 ${output_dir}/sample_${satid}_R2.fasta
-mv al-seqs ${output_dir}/sample_${satid}_R0.fasta
+cd ${output_dir}/tmp/${UMI}
+mv un-conc-mate.1 ${output_dir}/${R1I}
+mv un-conc-mate.2 ${output_dir}/${R2I}
+mv al-seqs ${output_dir}/${R0I}
 cd ${work_dir}
 
-rm -r -f ${output_dir}/tmp/sample_${satid}_unmapped""" > ${slurm_script}
+rm -r -f ${output_dir}/tmp/${UMI}
+
+else
+	echo "Error: missing array index as SLURM_ARRAY_TASK_ID"
+fi
+""" > ${slurm_script}
 
 # pushing script to slurm
 sbatch ${slurm_script}

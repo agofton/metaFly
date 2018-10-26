@@ -16,7 +16,7 @@
 #
 # Note if you have few seqs you can use blastn, but larger datasetst
 # it is significatnly faster to use megablast
-##
+#
 # This script does this by creating and launching a SLURM array script
 # for each sample (narrays=nchunks+1). Given that you may launch 100's of samples at once,
 # please limit the c variable so you don't clog up the cluster.
@@ -127,7 +127,8 @@ blastn \
 -num_threads 20
 -max_target_seqs 5
 -outfmt '6 ssciname scomname staxid qseqid saccver pident length mismatch gapopen evalue bitscore'
--out ${o}""" > ${slurm_script}
+-out ${o}
+""" > ${slurm_script}
 
 done
 

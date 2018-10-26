@@ -1,7 +1,6 @@
 #!/bin/bash
 
 ####
-#
 # Wirtten by Alexander Gofton, ANIC, CSIRO, 2018
 # alexaner.gofton@gmail.com; alexander.gofton@csiro.au
 ####
@@ -43,6 +42,8 @@ shift $((OPTIND - 1))
 slurm_script_dir="./slurm-submission-scripts/assemble-partitions/${job_name}"
 home_dir="`pwd`"
 logs=${out_dir}/logs
+satid='"$SLURM_ARRAY_TASK_ID"'
+satid2='${SLURM_ARRAY_TASK_ID}'
 
 # set dirs
 mkdir -p ${out_dir}
@@ -52,11 +53,32 @@ mkdir -p ${logs}
 
 # write slurm script
 for x in ${read_partitions}/*/
-	do
-		for z in ${x}/*.fastq
-			do
-			jname="partition_$(basename "$x")_$(basename "$z" .fastq)" 	# partition_36_sample_1_host_filtered
-			input="${read_partitions}/$(basename "$x")/$(basename "$z")"
+	
+    do
+		index=`for z in ${x}/*.fastq; do
+				echo -n '"'
+				echo -n $(basename "$z")
+				echo -n '"'
+				done`
+		index="(${index});"
+		index=`sed -E 's@""@" \\\\\n"@g' <<< ${index}`
+        INDEX='${index[$i]}'
+    
+        outdex=`for z in ${x}/*.fastq; do
+				echo -n '"'
+				echo -n $(basename "$z" .fastq)
+				echo -n '"'
+				done`
+		outdex="(${outdex});"
+		outdex=`sed -E 's@""@" \\\\\n"@g' <<< ${outdex}`
+        OUTDEX='${outdex[$i]}'
+
+		nsamples=`ls -1 ${x} | wc -l`
+		narrays=$(($nsamples-1))
+
+# array name eg. "partition_36"
+jname="partition_$(basename "$x")_array"
+pname="partition_$(basename "$x")" 
 
 echo """#!/bin/bash
 #SBATCH -J ${jname}
@@ -66,21 +88,35 @@ echo """#!/bin/bash
 #SBATCH -e ${logs}/${jname}_%A.err
 #SBATCH -o ${logs}/${jname}_%A.out
 #SBATCH --mem=128GB
+#SBATCH --array=0-${narrays}
 
 # load modules
 module load spades
 
+# array indexes
+index=${index}
+outdex=${outdex}
+
 # run spades
+if [ ! -z ${satid} ]
+then
+i=${satid2}
+
+mkdir ${out_dir}/${pname}
+mkdir ${tmp_dir}/${pname}
+
 spades.py \
 --only-assembler \
 -t 20 \
 -m 128 \
---12 ${input} \
--o ${out_dir}/${jname} \
--tmp-dir ${tmp_dir}/${jname}
+--12 ${INDEX} \
+-o ${out_dir}/${pname}/${OUTDEX}_out \
+-tmp-dir ${tmp_dir}/${pname}/${OUTDEX}_tmp
+
+else
+	echo "Error: missing array index as SLURM_ARRAY_TASK_ID"
+fi
 """ > ${slurm_script_dir}/${jname}.q
-	
-	done
 done
 
 # send scripts to slurm
