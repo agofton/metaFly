@@ -167,16 +167,16 @@ bowtie2 \
 --no-unal \
 --no-hd \
 --threads 20 \
---fast-local \
+--very-sensitive-local \
 --un-conc ${output_dir}/tmp/${UMI} \
 --al ${output_dir}/tmp/${UMI}
 
 # cleanup - yet to be tested
-cd ${output_dir}/tmp/${UMI}
-mv un-conc-mate.1 ${output_dir}/${R1I}
-mv un-conc-mate.2 ${output_dir}/${R2I}
-mv al-seqs ${output_dir}/${R0I}
-cd ${work_dir}
+#cd ${output_dir}/tmp/${UMI}
+#mv un-conc-mate.1 ${output_dir}/${R1I}
+#mv un-conc-mate.2 ${output_dir}/${R2I}
+#mv al-seqs ${output_dir}/${R0I}
+#cd ${work_dir}
 
 rm -r -f ${output_dir}/tmp/${UMI}
 
@@ -185,6 +185,7 @@ else
 fi
 """ > ${slurm_script}
 
+############################################################
 # pushing script to slurm
 sbatch ${slurm_script}
 

@@ -60,49 +60,47 @@ while getopts hi:o:j:n:d:t: option; do
 	esac
 done
 shift $((OPTIND - 1))
-
+#########################################################################
 # set vars
 narrays=$(($nchunks+1))
 satid='${SLURM_ARRAY_TASK_ID}'
 SBscripts_dir="./slurm-submission-scripts/split-n-blast_${job_name}"
 logs="${blast_output_dir}/logs"
-
+####################################################
 # set dirs 
 mkdir -p ${SBscripts_dir}
 mkdir -p ${input_reads_dir}/split_files
 mkdir -p ${blast_output_dir}
 mkdir -p ${logs}
-
+####################################################
 # using loop to split each input file
 for x in ${input_reads_dir}/*.fasta; do
     
-    # sample spec. vars.
+# sample spec. vars.
     name="$(basename "$x")"
     seqs_per_sample="`cat ${x} | grep -c "^>"`"
     seqs_per_chunk=$(($seqs_per_sample / $narrays))
-    
-	# callout
+# callout
     echo ""
     echo "========================================================="
     echo "Splitting ${name} into ${narrays} chunks; "
     echo "Approx ${seqs_per_chunk} reads per chunk"
 	echo "========================================================="
     echo ""
-
-    # command
+# command
     bin/usearch9.2 \
 	     -fastx_split ${x} \
   	     -splits  ${nchunks} \
   	     -outname "${input_reads_dir}/split_files/$(basename "$x" .fasta)_@.fasta"
 done
-
+####################################################
 # using loop to creating 1 SLURM array script per original input file
 for z in ${input_reads_dir}/*.fasta; do
 
 # set vars
-slurm_script="${SBscripts_dir}/$(basename "$z" .fasta)-blast-array.q"
-f="${input_reads_dir}/split_files/$(basename "$z" .fasta)_${satid}.fasta"
-o="${blast_output_dir}/$(basename "$z" .fasta)_${satid}.b6out"
+	slurm_script="${SBscripts_dir}/$(basename "$z" .fasta)-blast-array.q"
+	f="${input_reads_dir}/split_files/$(basename "$z" .fasta)_${satid}.fasta"
+	o="${blast_output_dir}/$(basename "$z" .fasta)_${satid}.b6out"
 
 # writing SLURM script
 echo """#!/bin/bash
@@ -131,7 +129,7 @@ blastn \
 """ > ${slurm_script}
 
 done
-
+###############################################################
 # pushing jobs to SLURM
 for job in ${SBscripts_dir}/*.q; do
   	

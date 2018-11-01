@@ -10,7 +10,7 @@ lsa-slurm/testData.tar.gz
 mf_sub_scripts/
 slurm-submission-scripts/
 lsa-ST/
-
+ref/
 # vim tmp files
 ########
 *.swp
