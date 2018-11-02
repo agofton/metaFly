@@ -3,9 +3,9 @@
 #SBATCH -J bbmap-AJ12-test
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=20
-#SBATCH --time=00:30:00
-#SBATCH -e /flush1/gof005/bbmap-AJ12-test.err
-#SBATCH -o /flush1/gof005/bbmap-AJ12-test.out
+#SBATCH --time=02:00:00
+#SBATCH -e /flush1/gof005/bbmap-AJ12-test-%A.err
+#SBATCH -o /flush1/gof005/bbmap-AJ12-test-%A.out
 
 module load bbmap
 
@@ -13,8 +13,7 @@ module load bbmap
 
 bbmap.sh \
 	in=/OSM/CBR/NCMI_AGOF/work/M_vetustissima_AC/QC/QC_out/AJ12_CGATGT_R1.fasta \
-	in2=/OSM/CBR/NCMI_AGOF/work/M_vetustissima_AC/QC/QC_out/AJ12_CGATGT_R2.fasta 
-	path=/flush1/gof005
+	in2=/OSM/CBR/NCMI_AGOF/work/M_vetustissima_AC/QC/QC_out/AJ12_CGATGT_R2.fasta \
 	threads=20 \
 	outu=/flush1/gof005/bbmap-unmapped-AJ12-test \
 	outm=/flush1/gof005/bbmap-mapped-AJ12-test \

@@ -25,10 +25,12 @@
 # Written by Alexander Gofton, ANIC, CSIRO, 2018
 # alexander.gofton@csiro.au; alexander.gofton@gmail.com
 ####
+
 # set params & help
 help_message="Writes and launches an array slurm script sending each sample in -i {input dir} to its own node to run trimmomatic.
 Assumes seqs are paired-end with fwd and rev seqs in two .fastq files (R1 & R2) (Illumina format .fastq).
 Changes trimmomatic QC params by editing lines 107-111."
+
 usage="Usage: $(basename "$0") 
 {-i /input/dir} 
 {-o /output/dir} 
@@ -63,7 +65,7 @@ do
 	esac
 done
 shift $((OPTIND - 1))
-################################################################
+
 # set vars
 home_dir="`pwd`"
 slurm_script="./slurm-submission-scripts/trim-qc_${job_name}.q"
@@ -75,7 +77,7 @@ narray=$(($nsamples-1))
 tmp1=${out_dir}/tmp1
 tmp2=${out_dir}/tmp2
 tmp3=${out_dir}/tmp3
-#################################################################
+
 # set dirs
 mkdir -p ${out_dir}
 mkdir -p ${logs}
@@ -84,7 +86,7 @@ mkdir -p ${slogs}
 mkdir -p ${tmp1}
 mkdir -p ${tmp2}
 mkdir -p ${tmp3}
-######################################################
+
 # R1 index
 R1index=`for x in ${in_dir}/*R1.fastq; do
 			echo -n '"'
@@ -93,7 +95,7 @@ R1index=`for x in ${in_dir}/*R1.fastq; do
 		done`
 R1index="(${R1index});"
 R1index=`sed -E 's@""@" \\\\\n"@g' <<< ${R1index}`
-######################################################
+
 # R2 index
 R2index=`for x in ${in_dir}/*R2.fastq; do
 			echo -n '"'
@@ -102,7 +104,7 @@ R2index=`for x in ${in_dir}/*R2.fastq; do
 		done`
 R2index="(${R2index});"
 R2index=`sed -E 's@""@" \\\\\n"@g' <<< ${R2index}`
-##########################################################
+
 # out index
 Outindex=`for x in ${in_dir}/*R1.fastq; do
 			id=$(basename "$x" _R1.fastq).fastq
@@ -112,7 +114,7 @@ Outindex=`for x in ${in_dir}/*R1.fastq; do
 		done`
 Outindex="(${Outindex});"
 Outindex=`sed -E 's@""@" \\\\\n"@g' <<< ${Outindex}`
-######################################################
+
 # trimlog index
 trimlogindex=`for x in ${in_dir}/*R1.fastq; do
 			id=$(basename "$x" _R1.fastq).trimlog
@@ -122,7 +124,7 @@ trimlogindex=`for x in ${in_dir}/*R1.fastq; do
 		done`
 trimlogindex="(${trimlogindex});"
 trimlogindex=`sed -E 's@""@" \\\\\n"@g' <<< ${trimlogindex}`
-#############################################################
+
 # summary index
 sumfileindex=`for x in ${in_dir}/*R1.fastq; do
 			id=$(basename "$x" _R1.fastq).sum
@@ -132,7 +134,7 @@ sumfileindex=`for x in ${in_dir}/*R1.fastq; do
 		done`
 sumfileindex="(${sumfileindex});"
 sumfileindex=`sed -E 's@""@" \\\\\n"@g' <<< ${sumfileindex}`
-#############################################################
+
 # 1P index
 P1index=`for x in ${in_dir}/*R1.fastq; do
 			id=$(basename "$x" _R1.fastq)_1P.fastq
@@ -142,7 +144,7 @@ P1index=`for x in ${in_dir}/*R1.fastq; do
 		done`
 P1index="(${P1index});"
 P1index=`sed -E 's@""@" \\\\\n"@g' <<< ${P1index}`
-######################################################
+
 # 2P index
 P2index=`for x in ${in_dir}/*R2.fastq; do
 			id=$(basename "$x" _R2.fastq)_2P.fastq
@@ -152,7 +154,7 @@ P2index=`for x in ${in_dir}/*R2.fastq; do
 		done`
 P2index="(${P2index});"
 P2index=`sed -E 's@""@" \\\\\n"@g' <<< ${P2index}`
-####################################################
+
 # 1U index
 U1index=`for x in ${in_dir}/*R1.fastq; do
 			id=$(basename "$x" _R1.fastq)_1U.fastq
@@ -162,7 +164,7 @@ U1index=`for x in ${in_dir}/*R1.fastq; do
 		done`
 U1index="(${U1index});"
 U1index=`sed -E 's@""@" \\\\\n"@g' <<< ${U1index}`
-####################################################
+
 # 2U index
 U2index=`for x in ${in_dir}/*R1.fastq; do
 			id=$(basename "$x" _R1.fastq)_2U.fastq
@@ -172,7 +174,7 @@ U2index=`for x in ${in_dir}/*R1.fastq; do
 		done`
 U2index="(${U2index});"
 U2index=`sed -E 's@""@" \\\\\n"@g' <<< ${U2index}`
-####################################################
+
 # R0 index
 R0index=`for x in ${in_dir}/*R1.fastq; do
 			id=$(basename "$x" _R1.fastq)_R0.fastq
@@ -182,7 +184,7 @@ R0index=`for x in ${in_dir}/*R1.fastq; do
 		done`
 R0index="(${R0index});"
 R0index=`sed -E 's@""@" \\\\\n"@g' <<< ${R0index}`
-####################################################
+
 # R1 .fasta 
 R1fa=`for x in ${in_dir}/*R1.fastq; do
 			id=$(basename "$x" _R1.fastq)_R1.fasta
@@ -192,7 +194,7 @@ R1fa=`for x in ${in_dir}/*R1.fastq; do
 		done`
 R1fa="(${R1fa});"
 R1fa=`sed -E 's@""@" \\\\\n"@g' <<< ${R1fa}`
-####################################################
+
 # R2.fasta
 R2fa=`for x in ${in_dir}/*R2.fastq; do
 			id=$(basename "$x" _R2.fastq)_R2.fasta
@@ -202,7 +204,7 @@ R2fa=`for x in ${in_dir}/*R2.fastq; do
 		done`
 R2fa="(${R2fa});"
 R2fa=`sed -E 's@""@" \\\\\n"@g' <<< ${R2fa}`
-####################################################
+
 # R0 .fasta
 R0fa=`for x in ${in_dir}/*R1.fastq; do
 			id=$(basename "$x" _R1.fastq)_R0.fasta
@@ -212,7 +214,7 @@ R0fa=`for x in ${in_dir}/*R1.fastq; do
 		done`
 R0fa="(${R0fa});"
 R0fa=`sed -E 's@""@" \\\\\n"@g' <<< ${R0fa}`
-####################################################
+
 # index vars
 R1I='${R1[$i]}'
 R2I='${R2[$i]}'
@@ -227,10 +229,10 @@ R0I='${R0[$i]}'
 R1faI='${R1f[$i]}'
 R2faI='${R2f[$i]}'
 R0faI='${R0f[$i]}'
-####################################################
+
 satid='${SLURM_ARRAY_TASK_ID}'
 satid2='"$SLURM_ARRAY_TASK_ID"'
-####################################################
+
 # writ slurm scrip
 echo "#!/bin/bash
 #SBATCH -J ${job_name}
@@ -297,6 +299,6 @@ bin/usearch9.2 -filter_phix ${tmp2}/${R0I} -output ${tmp3}/${R0I}
 #bin/usearch9.2 -fastq_filter ${tmp3}/${R0I} -fastaout ${out}/${R0faI}
 
 " > ${slurm_script}
-####################################################
+
 # pushing script to slurm
 sbatch ${slurm_script}
