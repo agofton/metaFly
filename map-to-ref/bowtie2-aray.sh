@@ -85,11 +85,12 @@ satid2='"$SLURM_ARRAY_TASK_ID"'
 # set dirs
 mkdir -p ${output_dir}
 mkdir -p ${output_dir}/logs
-mkdir -p ${output_dir}/tmp
+mkdir -p ${output_dir}/mapped
+mkdir -p ${output_dir}/unmapped
 ##############################
 # set array indexes
 # R1 index
-R1index=`for x in ${seqs_dir}/*R1.fasta; do
+R1index=`for x in ${seqs_dir}/*R1.fastq; do
 			echo -n '"'
 			echo -n $(basename "$x")
 			echo -n '"'
@@ -98,7 +99,7 @@ R1index=`for x in ${seqs_dir}/*R1.fasta; do
 		R1index=`sed -E 's@""@" \\\\\\n"@g' <<< ${R1index}`
 ###########################################################
 # R2 index
-R2index=`for x in ${seqs_dir}/*R2.fasta; do
+R2index=`for x in ${seqs_dir}/*R2.fastq; do
 			echo -n '"'
 			echo -n $(basename "$x")
 			echo -n '"'
@@ -107,7 +108,7 @@ R2index=`for x in ${seqs_dir}/*R2.fasta; do
 		R2index=`sed -E 's@""@" \\\\\\n"@g' <<< ${R2index}`
 ############################################################
 # R0 index
-R0index=`for x in ${seqs_dir}/*R0.fasta; do
+R0index=`for x in ${seqs_dir}/*R0.fastq; do
 			echo -n '"'
 			echo -n $(basename "$x")
 			echo -n '"'
@@ -116,22 +117,51 @@ R0index=`for x in ${seqs_dir}/*R0.fasta; do
 		R0index=`sed -E 's@""@" \\\\\\n"@g' <<< ${R0index}`
 #############################################################
 # unmapped dir index
-UMindex=`for x in ${seqs_dir}/*R1.fasta; do
+UMindex=`for x in ${seqs_dir}/*R1.fastq; do
 			echo -n '"'
-			echo -n $(basename "$x" _R1.fasta)_unmapped
+			echo -n $(basename "$x" _R1.fastq)_R%_unmapped.fastq
 			echo -n '"'
 		done`
 	UMindex="(${UMindex});"
 		UMindex=`sed -E 's@""@" \\\\\\n"@g' <<< ${UMindex}`
+#############################################################
+# unmapped dir index
+UNindex=`for x in ${seqs_dir}/*R1.fastq; do
+			echo -n '"'
+			echo -n $(basename "$x" _R1.fastq)_R0_unmapped.fastq
+			echo -n '"'
+		done`
+	UNindex="(${UNindex});"
+		UNindex=`sed -E 's@""@" \\\\\\n"@g' <<< ${UNindex}`
+#############################################################
+# unmapped dir index
+ALindex=`for x in ${seqs_dir}/*R1.fastq; do
+			echo -n '"'
+			echo -n $(basename "$x" _R1.fastq)_R0_mapped.fastq
+			echo -n '"'
+		done`
+	ALindex="(${ALindex});"
+		ALindex=`sed -E 's@""@" \\\\\\n"@g' <<< ${ALindex}`
+#############################################################
+# unmapped dir index
+ACindex=`for x in ${seqs_dir}/*R1.fastq; do
+			echo -n '"'
+			echo -n $(basename "$x" _R1.fastq)_R%_mapped.fastq
+			echo -n '"'
+		done`
+	ACindex="(${ACindex});"
+		ACindex=`sed -E 's@""@" \\\\\\n"@g' <<< ${ACindex}`
 #############################################################
 # index vars
 R1I='${R1[$i]}'
 R2I='${R2[$i]}'
 R0I='${R0[$i]}'
 UMI='${UM[$i]}'
+UNI='${UN[$i]}'
+ALI='${AL[$i]}'
+ACI='${AC[$i]}'
 #############################################################
 # writing slurm script
-  # SLURM variables
 echo """#!/bin/bash
 
 #SBATCH -J ${job_name}
@@ -141,6 +171,7 @@ echo """#!/bin/bash
 #SBATCH -o ${output_dir}/logs/${job_name}_%A_sample_%a.out
 #SBATCH -e ${output_dir}/logs/${job_name}_%A_sample_%a.err
 #SBATCH --array=0-${narrays}%${n_jobs_at_once}
+#SBATCH --qos=express
 
 # load modules
 module load bowtie/2.2.9
@@ -150,35 +181,27 @@ R1=${R1index}
 R2=${R2index}
 R0=${R0index}
 UM=${UMindex}
+UN=${UNindex}
+AL=${ALindex}
+AC=${ACindex}
 
 # main script
 if [ ! -z ${satid2} ]
 then
 i=${satid}
 
-mkdir -p ${ouput_dir}/tmp/${UMI}
-
 bowtie2 \
--f \
+-q \
 -x ${database} \
 -1 ${seqs_dir}/${R1I} \
 -2 ${seqs_dir}/${R2I} \
 -U ${seqs_dir}/${R0I} \
---no-unal \
---no-hd \
 --threads 20 \
---very-sensitive-local \
---un-conc ${output_dir}/tmp/${UMI} \
---al ${output_dir}/tmp/${UMI}
-
-# cleanup - yet to be tested
-#cd ${output_dir}/tmp/${UMI}
-#mv un-conc-mate.1 ${output_dir}/${R1I}
-#mv un-conc-mate.2 ${output_dir}/${R2I}
-#mv al-seqs ${output_dir}/${R0I}
-#cd ${work_dir}
-
-rm -r -f ${output_dir}/tmp/${UMI}
+--very-fast-local \
+--un ${output_dir}/unmapped/${UNI} \
+--un-conc ${output_dir}/unmapped/${UMI} \
+--al ${output_dir}/mapped/${ALI} \
+--al-conc ${output_dir}/mapped/${ACI}
 
 else
 	echo "Error: missing array index as SLURM_ARRAY_TASK_ID"

@@ -26,14 +26,14 @@ usage="Usage: $(basename "$0")
 {-o /all/output/goes/here}
 [-h print this message]"
 
-while getopts hi:o:j:n:d:t: option; do
+while getopts hi:o:b:t: option; do
 	case "${option}" in
 		h) echo "$help_message"
 		   echo ""
 		   echo "$usage"
 		   exit;;
 		i) in_dir=$OPTARG;;
-	   b6) b6_dir=$OPTARG;;
+	    b) b6_dir=$OPTARG;;
 		t) tax_list=$OPTARG;;
 		o) out_dir=$OPTARG;;
 		:) printf "missing argument for  -%s\n" "$OPTARG" >&2

@@ -66,28 +66,31 @@ narrays=$(($nchunks+1))
 satid='${SLURM_ARRAY_TASK_ID}'
 SBscripts_dir="./slurm-submission-scripts/split-n-blast_${job_name}"
 logs="${blast_output_dir}/logs"
+asn1_out="${blast_output_dir}/ans1_out"
+tab_out="${blast_output_dir}/tab_out"
+blast_out="${blast_output_dir}/blast_out"
 ####################################################
 # set dirs 
 mkdir -p ${SBscripts_dir}
 mkdir -p ${input_reads_dir}/split_files
 mkdir -p ${blast_output_dir}
 mkdir -p ${logs}
+mkdir -p ${asn1_out}
+mkdir -p ${tab_out}
+mkdir -p ${blast_out}
 ####################################################
 # using loop to split each input file
 for x in ${input_reads_dir}/*.fasta; do
     
-# sample spec. vars.
     name="$(basename "$x")"
     seqs_per_sample="`cat ${x} | grep -c "^>"`"
     seqs_per_chunk=$(($seqs_per_sample / $narrays))
-# callout
     echo ""
     echo "========================================================="
     echo "Splitting ${name} into ${narrays} chunks; "
     echo "Approx ${seqs_per_chunk} reads per chunk"
 	echo "========================================================="
     echo ""
-# command
     bin/usearch9.2 \
 	     -fastx_split ${x} \
   	     -splits  ${nchunks} \
@@ -100,7 +103,9 @@ for z in ${input_reads_dir}/*.fasta; do
 # set vars
 	slurm_script="${SBscripts_dir}/$(basename "$z" .fasta)-blast-array.q"
 	f="${input_reads_dir}/split_files/$(basename "$z" .fasta)_${satid}.fasta"
-	o="${blast_output_dir}/$(basename "$z" .fasta)_${satid}.b6out"
+	o="${asn1_out}/$(basename "$z" .fasta)_${satid}.ASN.1"
+	tab="${tab_out}/$(basename "$x" .fasta)_${satid}.b6out"
+	blastout="${blast_out}/$(basename "$x" .fasa)_${satid}.blast"
 
 # writing SLURM script
 echo """#!/bin/bash
@@ -112,11 +117,9 @@ echo """#!/bin/bash
 #SBATCH -e ${logs}/${job_name}_%A_%a.err
 #SBATCH --array=1-${narrays}%${n_arrays_at_once}
 
-# load modules
 module load blast+/2.6.0
 module load bioref
 
-# blast script
 blastn \
 -task megablast \
 -query ${f} \
@@ -124,8 +127,19 @@ blastn \
 -strand both
 -num_threads 20
 -max_target_seqs 5
--outfmt '6 ssciname scomname staxid qseqid saccver pident length mismatch gapopen evalue bitscore'
+-outfmt 11
 -out ${o}
+
+blast_formatter \
+-archive ${o} \
+-outfmt '6 ssciname scomname staxid qseqid saccver pident length mismatch gapopen evalue bitscore' \
+-out ${tab}
+
+blast_formatter \
+-archive ${o} \
+-outfmt  0 \
+-out ${blastout}
+
 """ > ${slurm_script}
 
 done
