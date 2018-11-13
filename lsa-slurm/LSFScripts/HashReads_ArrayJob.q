@@ -1,9 +1,9 @@
 #!/bin/bash
-#SBATCH --array=1-10
+#SBATCH --array=1-94
 #SBATCH -J HashReads
 #SBATCH -o ./Logs/HashReads-Out-%A.out
 #SBATCH -e ./Logs/HashReads-Err-%A.err
-#SBATCH -t 02:00:00
+#SBATCH -t 00:30:00
 #SBATCH --nodes=1
 #SBATCH --mem=128GB
 module load python/2.7.13

@@ -12,8 +12,8 @@ module load spades
 
 spades.py \
 	--meta \
-	-1 ../M_vetustissima_AC/raw_data/AJ12_CGATGT_R1.fastq.gz \
-	-2 ../M_vetustissima_AC/raw_data/AJ12_CGATGT_R2.fastq.gz \
+	-1 ../M_vetustissima_AC/raw_data/AJ12_CGATGT_R1.fastq \
+	-2 ../M_vetustissima_AC/raw_data/AJ12_CGATGT_R2.fastq \
 	--only-assembler \
 	-t 20 \
 	-m 512 \

@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --array=1-10
+#SBATCH --array=1-50
 #SBATCH -J MergeHash
 #SBATCH -o ./Logs/MergeHash-Out-%A.out
 #SBATCH -e ./Logs/MergeHash-Err-%A.err

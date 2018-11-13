@@ -197,7 +197,7 @@ bowtie2 \
 -2 ${seqs_dir}/${R2I} \
 -U ${seqs_dir}/${R0I} \
 --threads 20 \
---very-fast-local \
+--very-fast \
 --un ${output_dir}/unmapped/${UNI} \
 --un-conc ${output_dir}/unmapped/${UMI} \
 --al ${output_dir}/mapped/${ALI} \
