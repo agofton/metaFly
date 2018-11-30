@@ -75,7 +75,7 @@ done
 shift $((OPTIND - 1))
 ###########################################################################
 # set vars
-slurm_script="./slurm-submission-scripts/bt2_SLURM_${job_name}.q"
+slurm_script="./slurm-submission-scripts/bt2_SLURM_${job_name}_`date -I`.q"
 work_dir="`pwd`"
 satid='${SLRUM_ARRAY_TASK_ID}'  
 narrays=$(($n_jobs-1))

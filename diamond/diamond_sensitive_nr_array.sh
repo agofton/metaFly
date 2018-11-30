@@ -10,13 +10,13 @@ Results will be places in {-o /output/dir} in diamond archive format (100 - can 
 For easier downstream analysis it is recomended to concatedate paired (R1 and R2) and unpaired (R0) reads into a single file prior to running this script.
 By default it is assumed reads are in .fastq format, if .fasta options are required please edit this script."
 
-usage="Usage: $(basename "$0") 
-{-d path/to/nr/.dmnd <- defaul for bioref is /data/bioref/diamond_db/nr-xxxxxx_diamondVxxxx.dmnd} 
-{-i /input/dir} 
-{-o /output/dir} 
-{-j job_name} 
-{-n nfiles} 
-{-c run_njobs_at_once} 
+usage="Usage: $(basename "$0")
+{-d path/to/nr/.dmnd <- defaul for bioref is /data/bioref/diamond_db/nr-xxxxxx_diamondVxxxx.dmnd} <- make sure the correct version is specified - currently 0.9.22
+{-i /input/dir}
+{-o /output/dir}
+{-j job_name}
+{-n nfiles}
+{-c run_njobs_at_once}
 {-t max time (hh:mm:ss format)}
 {-f fasta or fastq input (enter one) default=fastq}
 [-h show this help message]"
@@ -105,8 +105,9 @@ echo "#!/bin/bash
 #SBATCH -e ${out_dir}/logs/${job_name}_%A_sample_%a.err
 #SBATCH --array=0-${narrays}%${n_jobs_at_once}
 #SBATCH --mem=128GB
+#SBATCH --qos=express
 
-module load diamond bioref blast+
+module load diamond/0.9.22 bioref blast+
 
 FILE_INDEX=$file_index
 OUT_INDEX=$out_index
@@ -123,9 +124,8 @@ diamond blastx \
 --outfmt 100 \
 --threads 20 \
 --strand both \
---top 10 \
---min-orf 20 \
---block-size=6
+--min-orf 1 \
+--sensitive
 
 diamond view -a ${out_dir}/${oiP} > ${out_dir}/${d6P}
 
@@ -135,5 +135,4 @@ fi
 " > ${slurm_script}
 
 # pushing job to slurm
-#sbatch ${slurm_script}
-
+sbatch ${slurm_script}

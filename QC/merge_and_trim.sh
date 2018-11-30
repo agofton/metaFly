@@ -49,7 +49,7 @@ shift $((OPTIND - 1))
 
 # set vars
 narray=$(($nsamples-1))
-slurm_script="./slurm-submission-scripts/merge_and_trim_${job_name}.q"
+slurm_script="./slurm-submission-scripts/merge_and_trim_${job_name}_`date -I`.q"
 satid='"$SLURM_ARRAY_TASK_ID"'
 satid2='${SLURM_ARRAY_TASK_ID}'
 
