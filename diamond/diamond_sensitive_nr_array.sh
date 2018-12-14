@@ -105,7 +105,7 @@ echo "#!/bin/bash
 #SBATCH -e ${out_dir}/logs/${job_name}_%A_sample_%a.err
 #SBATCH --array=0-${narrays}%${n_jobs_at_once}
 #SBATCH --mem=128GB
-#SBATCH --qos=express
+
 
 module load diamond/0.9.22 bioref blast+
 
@@ -125,7 +125,8 @@ diamond blastx \
 --threads 20 \
 --strand both \
 --min-orf 1 \
---sensitive
+--sensitive \
+--unal 1
 
 diamond view -a ${out_dir}/${oiP} > ${out_dir}/${d6P}
 

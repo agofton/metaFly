@@ -50,9 +50,11 @@ usage="Usage: $(basename "$0")
 {-n nsamples} 
 {-c run_nsamples_at_once} 
 {-t max time (hh:mm:ss format)}
+{-p nthreads}
+{-m mem in GB eg. 128GB}
 [-h show this help message]"
 
-while getopts hd:s:o:j:n:c:t: option; do
+while getopts hd:s:o:j:n:c:t:p:m: option; do
 	case "${option}" in
 		h) echo "$hmessage"
 		   echo "$usage"
@@ -64,6 +66,8 @@ while getopts hd:s:o:j:n:c:t: option; do
 		n) n_jobs=$OPTARG;;
 		c) n_jobs_at_once=$OPTARG;;
 		t) time_per_sample=$OPTARG;;
+		p) nthreads=$OPTARG;;
+		m) mem=$OPTARG;;
 		:) printf "missing argument for  -%s\n" "$OPTARG" >&2
 		   echo "$usage" >&2
 	  	   exit 1;;
@@ -73,7 +77,7 @@ while getopts hd:s:o:j:n:c:t: option; do
 	esac
 done
 shift $((OPTIND - 1))
-###########################################################################
+
 # set vars
 slurm_script="./slurm-submission-scripts/bt2_SLURM_${job_name}_`date -I`.q"
 work_dir="`pwd`"
@@ -81,13 +85,13 @@ satid='${SLRUM_ARRAY_TASK_ID}'
 narrays=$(($n_jobs-1))
 satid='${SLURM_ARRAY_TASK_ID}'
 satid2='"$SLURM_ARRAY_TASK_ID"'
-######################################################################## 
+ 
 # set dirs
 mkdir -p ${output_dir}
 mkdir -p ${output_dir}/logs
 mkdir -p ${output_dir}/mapped
 mkdir -p ${output_dir}/unmapped
-##############################
+
 # set array indexes
 # R1 index
 R1index=`for x in ${seqs_dir}/*R1.fastq; do
@@ -97,7 +101,7 @@ R1index=`for x in ${seqs_dir}/*R1.fastq; do
 		done`
 	R1index="(${R1index});"
 		R1index=`sed -E 's@""@" \\\\\\n"@g' <<< ${R1index}`
-###########################################################
+
 # R2 index
 R2index=`for x in ${seqs_dir}/*R2.fastq; do
 			echo -n '"'
@@ -106,7 +110,7 @@ R2index=`for x in ${seqs_dir}/*R2.fastq; do
 		done`
 	R2index="(${R2index});"
 		R2index=`sed -E 's@""@" \\\\\\n"@g' <<< ${R2index}`
-############################################################
+
 # R0 index
 R0index=`for x in ${seqs_dir}/*R0.fastq; do
 			echo -n '"'
@@ -115,7 +119,7 @@ R0index=`for x in ${seqs_dir}/*R0.fastq; do
 		done`
 	R0index="(${R0index});"
 		R0index=`sed -E 's@""@" \\\\\\n"@g' <<< ${R0index}`
-#############################################################
+
 # unmapped dir index
 UMindex=`for x in ${seqs_dir}/*R1.fastq; do
 			echo -n '"'
@@ -124,7 +128,7 @@ UMindex=`for x in ${seqs_dir}/*R1.fastq; do
 		done`
 	UMindex="(${UMindex});"
 		UMindex=`sed -E 's@""@" \\\\\\n"@g' <<< ${UMindex}`
-#############################################################
+
 # unmapped dir index
 UNindex=`for x in ${seqs_dir}/*R1.fastq; do
 			echo -n '"'
@@ -133,7 +137,7 @@ UNindex=`for x in ${seqs_dir}/*R1.fastq; do
 		done`
 	UNindex="(${UNindex});"
 		UNindex=`sed -E 's@""@" \\\\\\n"@g' <<< ${UNindex}`
-#############################################################
+
 # unmapped dir index
 ALindex=`for x in ${seqs_dir}/*R1.fastq; do
 			echo -n '"'
@@ -142,7 +146,7 @@ ALindex=`for x in ${seqs_dir}/*R1.fastq; do
 		done`
 	ALindex="(${ALindex});"
 		ALindex=`sed -E 's@""@" \\\\\\n"@g' <<< ${ALindex}`
-#############################################################
+
 # unmapped dir index
 ACindex=`for x in ${seqs_dir}/*R1.fastq; do
 			echo -n '"'
@@ -151,7 +155,7 @@ ACindex=`for x in ${seqs_dir}/*R1.fastq; do
 		done`
 	ACindex="(${ACindex});"
 		ACindex=`sed -E 's@""@" \\\\\\n"@g' <<< ${ACindex}`
-#############################################################
+
 # index vars
 R1I='${R1[$i]}'
 R2I='${R2[$i]}'
@@ -160,7 +164,7 @@ UMI='${UM[$i]}'
 UNI='${UN[$i]}'
 ALI='${AL[$i]}'
 ACI='${AC[$i]}'
-#############################################################
+
 # writing slurm script
 echo """#!/bin/bash
 
@@ -171,7 +175,7 @@ echo """#!/bin/bash
 #SBATCH -o ${output_dir}/logs/${job_name}_%A_sample_%a.out
 #SBATCH -e ${output_dir}/logs/${job_name}_%A_sample_%a.err
 #SBATCH --array=0-${narrays}%${n_jobs_at_once}
-#SBATCH --qos=express
+#SBATCH --mem=${mem}
 
 # load modules
 module load bowtie/2.2.9
@@ -196,7 +200,7 @@ bowtie2 \
 -1 ${seqs_dir}/${R1I} \
 -2 ${seqs_dir}/${R2I} \
 -U ${seqs_dir}/${R0I} \
---threads 20 \
+--threads ${nthreads} \
 --very-fast \
 --un ${output_dir}/unmapped/${UNI} \
 --un-conc ${output_dir}/unmapped/${UMI} \
@@ -208,7 +212,7 @@ else
 fi
 """ > ${slurm_script}
 
-############################################################
+
 # pushing script to slurm
 sbatch ${slurm_script}
 
